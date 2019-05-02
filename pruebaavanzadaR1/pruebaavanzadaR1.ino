@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include <XBee.h>
 XBee xbee = XBee();
-uint8_t payload[]={'C',' ','+','8','0','.','8','7',' ','+','0','.','8','7','0',' ','-','0','.','2','0','0',' ','B'};
+uint8_t payload[]={'C',' ','+','8','0','.','8','7',' ','+','0','.','8','7','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0'};
 String cadtemp;
 XBeeAddress64 addr64 = XBeeAddress64(0x00000000, 0x00000000);
 ZBTxRequest zbTx = ZBTxRequest(addr64, payload, sizeof(payload));
@@ -73,6 +73,7 @@ ZBTxRequest zbTx = ZBTxRequest(addr64, payload, sizeof(payload));
 float headingYaw=0;
 float headingRoll=0;
 float headingPitch=0;
+float mmg1=0,mmg2=0,emg1=0,emg2=0; 
 int cont=0;
 int i=0;
 int DRDY=0;
@@ -174,19 +175,36 @@ void loop() {
  // Serial.println("Back to measure");
     
   }
+
+  emg1=analogRead(A8);
+  mmg1=analogRead(A7);
+  mmg2=analogRead(A6);
+  emg2=analogRead(A0);
 //while (Serial.available() > 0) {
 //  aa=Serial.read();
 //  if(aa=='a'){ 
 cadtemp+='A';
 cadtemp+=' ';
-cadtemp+=convertfloattostring(headingYaw)+' '+convertfloattostring(headingRoll)+' '+convertfloattostring(headingPitch);
+cadtemp+=convertfloattostring(headingYaw);
+cadtemp+=' '+convertfloattostring(headingRoll);
+cadtemp+=' '+convertfloattostring(headingPitch);
+cadtemp+=' '+convertfloattostring(emg1);
+cadtemp+=' '+convertfloattostring(mmg1);
+cadtemp+=' '+convertfloattostring(emg2);
+cadtemp+=' '+convertfloattostring(mmg2);
 //  Serial.print('C');Serial.print(" ");
 //  Serial.print(convertfloattostring(headingYaw)); Serial.print(" ");
 //  Serial.print(convertfloattostring(headingRoll)); Serial.print(" ");
 //  Serial.print(convertfloattostring(headingPitch)); Serial.print(" ");
 //  Serial.print('D');
+
+//Serial.print(mmg1);Serial.print(" ");
+//Serial.print(emg1);Serial.print(" ");
+//Serial.print(mmg2);Serial.print(" ");
+//Serial.print(emg2);Serial.println(" ");
 msg(cadtemp);
 xbee.send(zbTx);
+//Serial.print(cadtemp);
 cadtemp="";
 delay(20);
 
@@ -205,7 +223,7 @@ String convertfloattostring(float a){
 void msg(String a){
  
   
-  for(i=0;i<21;i++){
+  for(i=0;i<sizeof(payload);i++){
 
   payload[i]=a[i];
 
