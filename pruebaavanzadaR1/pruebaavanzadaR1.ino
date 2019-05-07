@@ -1,6 +1,9 @@
 #include <Wire.h>
 #include <XBee.h>
 XBee xbee = XBee();
+XBeeResponse response = XBeeResponse();
+ZBExplicitRxResponse rx = ZBExplicitRxResponse();
+ModemStatusResponse msr = ModemStatusResponse();
 uint8_t payload[]={'C',' ','+','8','0','.','8','7',' ','+','0','.','8','7','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0'};
 String cadtemp;
 XBeeAddress64 addr64 = XBeeAddress64(0x00000000, 0x00000000);
@@ -103,7 +106,8 @@ void setup() {
   // put your setup code here, to run once:
 Wire.begin();
 Serial.begin(115200);
-xbee.setSerial(Serial);
+Serial1.begin(115200);
+xbee.setSerial(Serial1);
 //Serial1.begin(115200);
 //pinMode(21,INPUT_PULLUP);
 //pinMode(20,INPUT_PULLUP);
@@ -131,11 +135,11 @@ delay(2000);
   delay(10);
 
   if (error == 0)  {
-    Serial.println("0x68 1 found");
+   // Serial.println("0x68 1 found");
     //call MPR121 initialization function here
   }
   else  {
-    Serial.println("0x68 1 not found");
+ //   Serial.println("0x68 1 not found");
   }
 
   
@@ -150,7 +154,7 @@ void loop() {
 
   readxsens();
   if(cont==0){
-  Serial.println("Goto config");
+  //Serial.println("Goto config");
   sendgotoconfig();
   cont=1;
   }
@@ -176,23 +180,7 @@ void loop() {
     
   }
 
-  emg1=analogRead(A8);
-  mmg1=analogRead(A7);
-  mmg2=analogRead(A6);
-  emg2=analogRead(A0);
-//while (Serial.available() > 0) {
-//  aa=Serial.read();
-//  if(aa=='a'){ 
-cadtemp+='A';
-cadtemp+=' ';
-cadtemp+=convertfloattostring(headingYaw);
-cadtemp+=' '+convertfloattostring(headingRoll);
-cadtemp+=' '+convertfloattostring(headingPitch);
-cadtemp+=' '+convertfloattostring(emg1);
-cadtemp+=' '+convertfloattostring(mmg1);
-cadtemp+=' '+convertfloattostring(emg2);
-cadtemp+=' '+convertfloattostring(mmg2);
-//  Serial.print('C');Serial.print(" ");
+
 //  Serial.print(convertfloattostring(headingYaw)); Serial.print(" ");
 //  Serial.print(convertfloattostring(headingRoll)); Serial.print(" ");
 //  Serial.print(convertfloattostring(headingPitch)); Serial.print(" ");
@@ -202,8 +190,47 @@ cadtemp+=' '+convertfloattostring(mmg2);
 //Serial.print(emg1);Serial.print(" ");
 //Serial.print(mmg2);Serial.print(" ");
 //Serial.print(emg2);Serial.println(" ");
-msg(cadtemp);
-xbee.send(zbTx);
+    
+    xbee.readPacket();
+
+    if (xbee.getResponse().isAvailable()) {
+      // got something
+     // Serial.print("llego1");
+     // Serial.print(xbee.getResponse().getApiId());
+      if (xbee.getResponse().getApiId() == ZB_EXPLICIT_RX_RESPONSE) {
+        // got a zb rx packet
+       // now fill our zb rx class
+       // xbee.getResponse().getZBExplicitRxResponse(rx);
+         emg1=analogRead(A8);
+         mmg1=analogRead(A7);
+         mmg2=analogRead(A6);
+         emg2=analogRead(A0);
+//while (Serial.available() > 0) {
+//  aa=Serial.read();
+//  if(aa=='a'){ 
+        cadtemp+='A';
+        cadtemp+=' ';
+        cadtemp+=convertfloattostring(headingYaw);
+        cadtemp+=' '+convertfloattostring(headingRoll);
+        cadtemp+=' '+convertfloattostring(headingPitch);
+        cadtemp+=' '+convertfloattostring(emg1);
+        cadtemp+=' '+convertfloattostring(mmg1);
+        cadtemp+=' '+convertfloattostring(emg2);
+        cadtemp+=' '+convertfloattostring(mmg2);
+//  Serial.print('C');Serial.print(" ");
+        msg(cadtemp);
+        xbee.send(zbTx);
+       // Serial.print("llego");
+      // Serial.print("llego2");
+      } 
+        // the local XBee sends this response on certain events, like association/dissociation
+        
+ 
+    }else if (xbee.getResponse().isError()) {
+
+    }
+  //      msg(cadtemp);
+ //       xbee.send(zbTx);
 //Serial.print(cadtemp);
 cadtemp="";
 delay(20);

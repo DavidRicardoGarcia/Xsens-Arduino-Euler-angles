@@ -1,7 +1,10 @@
 #include <Wire.h>
 #include <XBee.h>
 XBee xbee = XBee();
-uint8_t payload[]={'C',' ','+','8','0','.','8','7',' ','+','0','.','8','7','0',' ','-','0','.','2','0','0',' ','D'};
+XBeeResponse response = XBeeResponse();
+ZBExplicitRxResponse rx = ZBExplicitRxResponse();
+ModemStatusResponse msr = ModemStatusResponse();
+uint8_t payload[]={'C',' ','+','8','0','.','8','7',' ','+','0','.','8','7','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0'};
 String cadtemp;
 XBeeAddress64 addr64 = XBeeAddress64(0x00000000, 0x00000000);
 ZBTxRequest zbTx = ZBTxRequest(addr64, payload, sizeof(payload));
@@ -102,7 +105,8 @@ void setup() {
   // put your setup code here, to run once:
 Wire.begin();
 Serial.begin(115200);
-xbee.setSerial(Serial);
+Serial3.begin(115200);
+xbee.setSerial(Serial3);
 //Serial1.begin(115200);
 //pinMode(21,INPUT_PULLUP);
 //pinMode(20,INPUT_PULLUP);
@@ -174,19 +178,44 @@ void loop() {
  // Serial.println("Back to measure");
     
   }
+
+    xbee.readPacket();
+
+    if (xbee.getResponse().isAvailable()) {
+      // got something
+      Serial.println("llego transmit status");
+      Serial.println(xbee.getResponse().getApiId());
+     // Serial.print(xbee.getResponse().getApiId());
+      if (xbee.getResponse().getApiId() == ZB_EXPLICIT_RX_RESPONSE) {
+        // got a zb rx packet
+       // now fill our zb rx class
+       // xbee.getResponse().getZBExplicitRxResponse(rx);
+
 //while (Serial.available() > 0) {
 //  aa=Serial.read();
 //  if(aa=='a'){ 
-cadtemp+='C';
-cadtemp+=' ';
-cadtemp+=convertfloattostring(headingYaw)+' '+convertfloattostring(headingRoll)+' '+convertfloattostring(headingPitch);
+        cadtemp+='B';
+        cadtemp+=' ';
+        cadtemp+=convertfloattostring(headingYaw);
+        cadtemp+=' '+convertfloattostring(headingRoll);
+        cadtemp+=' '+convertfloattostring(headingPitch);
+        cadtemp+=' '+convertfloattostring(accel[0]);
+        cadtemp+=' '+convertfloattostring(accel[1]);
+        cadtemp+=' '+convertfloattostring(accel[2]);
+       
 //  Serial.print('C');Serial.print(" ");
-//  Serial.print(convertfloattostring(headingYaw)); Serial.print(" ");
-//  Serial.print(convertfloattostring(headingRoll)); Serial.print(" ");
-//  Serial.print(convertfloattostring(headingPitch)); Serial.print(" ");
-//  Serial.print('D');
-msg(cadtemp);
-xbee.send(zbTx);
+        msg(cadtemp);
+        xbee.send(zbTx);
+       // Serial.print("llego");
+      // Serial.print("llego2");
+      } 
+        // the local XBee sends this response on certain events, like association/dissociation
+        
+ 
+    }else if (xbee.getResponse().isError()) {
+
+    }
+
 cadtemp="";
 delay(20);
 
@@ -205,7 +234,7 @@ String convertfloattostring(float a){
 void msg(String a){
  
   
-  for(i=0;i<21;i++){
+  for(i=0;i<sizeof(payload);i++){
 
   payload[i]=a[i];
 
