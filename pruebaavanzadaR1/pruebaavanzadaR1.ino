@@ -233,7 +233,7 @@ void loop() {
  //       xbee.send(zbTx);
 //Serial.print(cadtemp);
 cadtemp="";
-delay(20);
+delay(1);
 
 }
 

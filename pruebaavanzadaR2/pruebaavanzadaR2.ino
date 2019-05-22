@@ -217,7 +217,7 @@ void loop() {
     }
 
 cadtemp="";
-delay(20);
+delay(1);
 
 }
 
