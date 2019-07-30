@@ -1,0 +1,3 @@
+﻿  main.cpp
+c:\users\crist\desktop\codigos en c++ para seriales\serial vibracion\main.cpp(61): warning C4244: 'argumento': conversión de 'double' a 'DWORD'; posible pérdida de datos
+  serialv.vcxproj -> C:\Users\crist\source\repos\serialv\Debug\serialv.exe
