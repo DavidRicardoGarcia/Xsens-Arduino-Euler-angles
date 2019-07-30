@@ -71,7 +71,7 @@ void loop() {
   Serial.println("acabe inicializacion J");
   }
     
-   if (inChar=='f'){ 
+   if (inChar!='f'){ 
       
 //      Serial.println("llego la f");
 //

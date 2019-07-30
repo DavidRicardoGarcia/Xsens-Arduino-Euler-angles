@@ -1,13 +1,5 @@
 #include <Wire.h>
-#include <XBee.h>
-XBee xbee = XBee();
-XBeeResponse response = XBeeResponse();
-ZBExplicitRxResponse rx = ZBExplicitRxResponse();
-ModemStatusResponse msr = ModemStatusResponse();
-uint8_t payload[]={'C',' ','+','8','0','.','8','7',' ','+','0','.','8','7','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0',' ','-','0','.','2','0','0'};
-String cadtemp;
-XBeeAddress64 addr64 = XBeeAddress64(0x00000000, 0x00000000);
-ZBTxRequest zbTx = ZBTxRequest(addr64, payload, sizeof(payload));
+
 
 //MID
 
@@ -85,6 +77,7 @@ uint8_t Setoutput[11]={0xC0,0x08, 0x40,0x20,0x01,0x90,0x20, 0x10, 0x00, 0x64,0xB
 //uint8_t Setoutput[15]={0xC0,0x0C,0x20, 0x10, 0x00, 0x64, 0x40,0x20,0x00,0x64,0xE0,0x20,0xFF,0XFF,0xDF};
 //uint8_t Setoutput[45]={0xC0 ,0x10, 0x10, 0x20, 0xFF ,0xFF ,0x10, 0x60, 0xFF, 0xFF, 0x20, 0x10, 0x00, 0x64, 0x40, 0x20, 0x01, 0x90 ,0x10};
 uint8_t goconfig[3]={0x30, 0x00, 0xD1};
+uint8_t resetorientation[5]={0xA4, 0x02, 0x00, 0x04, 0x57};
 //byte goconfig[5]={ 0xFA, 0xFF, 0x30, 0x00, 0xD1};
 //uint8_t filterprofile[7]={ 0xFA, 0xFF, 0x64, 0x02, 0x00, 0x02, 0x99};
 uint8_t filterprofile[5]={0x64, 0x02, 0x00, 0x32, 0x69};
@@ -99,14 +92,20 @@ float accel[3]={0};
 float mag[3]={0};
 float rot[3]={0};
 char aa;
-//String datastring;
+int angtest=0;
+int prof=0;
+float time1=0;
+float time2=0;
+int por=0;
+
+String cadtemp;
 
 void setup() {
   // put your setup code here, to run once:
 Wire.begin();
 Serial.begin(115200);
-Serial3.begin(115200);
-xbee.setSerial(Serial3);
+Serial2.begin(115200);
+//analogWriteResolution(12);
 //Serial1.begin(115200);
 //pinMode(21,INPUT_PULLUP);
 //pinMode(20,INPUT_PULLUP);
@@ -115,6 +114,20 @@ pinMode(13,OUTPUT);
 pinMode(12,OUTPUT);
 pinMode(11,OUTPUT); 
 pinMode(4,OUTPUT);
+
+pinMode(33,OUTPUT);
+pinMode(31,OUTPUT);
+pinMode(29,OUTPUT);
+pinMode(27,OUTPUT); 
+pinMode(25,OUTPUT);
+pinMode(23,OUTPUT);
+
+digitalWrite(33,LOW); 
+digitalWrite(31,LOW); 
+digitalWrite(29,LOW); 
+digitalWrite(27,LOW); 
+digitalWrite(25,LOW); 
+digitalWrite(23,LOW); 
 
 digitalWrite(13,HIGH);
 digitalWrite(12,HIGH);
@@ -145,7 +158,7 @@ delay(2000);
 }
 
 void loop() {
-
+ // time1=micros();
   while(!DRDY){
   DRDY=digitalRead(3);
   }
@@ -176,53 +189,47 @@ void loop() {
   
   if(datanotif[0]==0x11){
  // Serial.println("Back to measure");
+  if(por==0){
+    resetorient();
+    por=1;
+    }
     
   }
-//Serial.println(headingYaw);
-//Serial.println(headingRoll);
-//Serial.println(headingPitch);
-    xbee.readPacket();
 
-    if (xbee.getResponse().isAvailable()) {
-      // got something
-      Serial.println("llego transmit status");
-      Serial.println(xbee.getResponse().getApiId());
-     // Serial.print(xbee.getResponse().getApiId());
-      if (xbee.getResponse().getApiId() == ZB_EXPLICIT_RX_RESPONSE) {
-        // got a zb rx packet
-       // now fill our zb rx class
-       // xbee.getResponse().getZBExplicitRxResponse(rx);
-
-//while (Serial.available() > 0) {
-//  aa=Serial.read();
-//  if(aa=='a'){ 
-        cadtemp+='B';
-        cadtemp+=' ';
-        cadtemp+=convertfloattostring(headingYaw);
-        cadtemp+=' '+convertfloattostring(headingRoll);
-        cadtemp+=' '+convertfloattostring(headingPitch);
+        //cadtemp+='B';
+        //cadtemp+=' ';
+        cadtemp+=convertfloattostring(quat[0]);
+        cadtemp+=' '+convertfloattostring(quat[1]);
+        cadtemp+=' '+convertfloattostring(quat[2]);
+        cadtemp+=' '+convertfloattostring(quat[3]);
         cadtemp+=' '+convertfloattostring(accel[0]);
         cadtemp+=' '+convertfloattostring(accel[1]);
         cadtemp+=' '+convertfloattostring(accel[2]);
-       
-//  Serial.print('C');Serial.print(" ");
-        msg(cadtemp);
-        xbee.send(zbTx);
-       // Serial.print("llego");
-      // Serial.print("llego2");
-      } 
-      
-        // the local XBee sends this response on certain events, like association/dissociation
         
- 
-    }else if (xbee.getResponse().isError()) {
 
-    }
+       
+        
+//digitalWrite(33,HIGH);       
+//prof=map(angtest,0,360,2000,3000);
+//analogWrite(DAC0, prof);
+//digitalWrite(33,LOW); 
 
+
+
+Serial2.print(cadtemp);
+Serial2.print('n');
+//Serial.println(prof);
+//time2=micros();
+Serial.println(cadtemp);
+//Serial.print(quat[0]);Serial.print(' ');
+//Serial.print(quat[1]);Serial.print(' ');
+//Serial.print(quat[2]);Serial.print(' ');
+//Serial.println(quat[3]);
+//Serial.println(time2-time1);
 cadtemp="";
 
 
-delay(1);
+delay(5);
 
 }
 
@@ -236,16 +243,7 @@ String convertfloattostring(float a){
   return datastring;
   }
 
-void msg(String a){
- 
-  
-  for(i=0;i<sizeof(payload);i++){
 
-  payload[i]=a[i];
-
-   } 
- 
-  }
 
 void readpipestatus(){
 
@@ -407,7 +405,7 @@ void quatToEulerAngles(){
   readPipeMeas();
   parseData(datameas, measurementSize);
   
-  quatToEulerAngles();
+  //quatToEulerAngles();
   
   }  
 
@@ -438,6 +436,15 @@ void sendgotoconfig(){
   Wire.write(CONTROL_PIPE);
     for(int i = 0; i < sizeof(goconfig); ++i){
       Wire.write(goconfig[i]);
+    }
+   Wire.endTransmission();
+}
+
+void resetorient(){
+  Wire.beginTransmission(MTI_ADD);
+  Wire.write(CONTROL_PIPE);
+    for(int i = 0; i < sizeof(resetorientation); ++i){
+      Wire.write(resetorientation[i]);
     }
    Wire.endTransmission();
 }
